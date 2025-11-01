@@ -13,20 +13,6 @@ export default function HomePage() {
     const [folders, setFolders] = useState([]);
     const [selectedFolder, setSelectedFolder] = useState('');
 
-    useEffect(() => {
-        // Fetch user data on component mount
-        fetch('/api/get-name')
-            .then(res => res.json())
-            .then(data => {
-                setUser(data.user);
-            })
-            .catch(error => console.error('Failed to fetch user:', error));
-
-        // Load existing files and folders
-        loadFiles();
-        loadFolders();
-    }, []);
-
     const loadFiles = async () => {
         try {
             const response = await fetch('/api/files');
@@ -46,6 +32,20 @@ export default function HomePage() {
             console.error('Failed to load folders:', error);
         }
     };
+
+    useEffect(() => {
+        // Fetch user data on component mount
+        fetch('/api/get-name')
+            .then(res => res.json())
+            .then(data => {
+                setUser(data.user);
+            })
+            .catch(error => console.error('Failed to fetch user:', error));
+
+        // Load existing files and folders
+        loadFiles();
+        loadFolders();
+    }, []);
 
     const handleUploadSuccess = () => {
         // Reload files and folders

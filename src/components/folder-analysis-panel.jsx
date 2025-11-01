@@ -119,37 +119,39 @@ export function FolderAnalysisPanel({ folderPath, folderName, onClose }) {
   // Initial state
   if (!loading && !analysisData) {
     return (
-      <Card className="w-full p-8 shadow-lg">
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-center gap-3">
-            <Layers className="h-8 w-8 text-purple-600" />
+      <Card className="w-full max-w-md mx-auto p-6 shadow-sm border">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+              <Layers className="h-4 w-4 text-purple-600" />
+            </div>
             <div>
-              <h2 className="text-2xl font-bold">Folder Analysis</h2>
-              <p className="text-sm text-muted-foreground">{folderName || folderPath}</p>
+              <h3 className="text-sm font-semibold">Security Analysis</h3>
+              <p className="text-xs text-muted-foreground">{folderName || folderPath}</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
+            <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="text-center py-12">
-          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
-            <div className="flex flex-col items-center gap-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <FileSearch className="h-6 w-6 text-blue-600" />
+        <div className="text-center py-8 space-y-6">
+          <div className="flex justify-center gap-4">
+            <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50">
+              <FileSearch className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Linting</span>
             </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-              <Shield className="h-6 w-6 text-red-600" />
+            <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50">
+              <Shield className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Security</span>
             </div>
-            <div className="flex flex-col items-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <Code2 className="h-6 w-6 text-green-600" />
+            <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50">
+              <Code2 className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">Quality</span>
             </div>
           </div>
-          <Button onClick={startAnalysis} size="lg" className="gap-2">
-            <FileSearch className="h-5 w-5" />
+          <Button onClick={startAnalysis} size="sm" className="w-full">
+            <FileSearch className="h-4 w-4 mr-2" />
             Start Analysis
           </Button>
         </div>
@@ -160,20 +162,20 @@ export function FolderAnalysisPanel({ folderPath, folderName, onClose }) {
   // Loading state
   if (loading) {
     return (
-      <Card className="w-full p-8 shadow-lg">
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+      <Card className="w-full max-w-md mx-auto p-6 shadow-sm border">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
             <div>
-              <h2 className="text-2xl font-bold">Analyzing...</h2>
-              <p className="text-sm text-muted-foreground">{folderName || folderPath}</p>
+              <h3 className="text-sm font-semibold">Analyzing...</h3>
+              <p className="text-xs text-muted-foreground">{folderName || folderPath}</p>
             </div>
           </div>
         </div>
 
-        <div className="text-center py-12">
-          <Progress value={progress} className="h-3 mb-2" />
-          <p className="text-sm text-muted-foreground">{progress}% complete</p>
+        <div className="py-8 space-y-3">
+          <Progress value={progress} className="h-2" />
+          <p className="text-xs text-center text-muted-foreground">{progress}% complete</p>
         </div>
       </Card>
     );
@@ -183,109 +185,103 @@ export function FolderAnalysisPanel({ folderPath, folderName, onClose }) {
   const metrics = analysisData.metrics;
 
   return (
-    <Card className="w-full p-6 shadow-lg max-h-[90vh] overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex items-center gap-3">
-          <Layers className="h-8 w-8 text-purple-600" />
+    <Card className="w-full max-w-3xl mx-auto shadow-sm border max-h-[85vh] overflow-hidden flex flex-col">
+      {/* Compact Header */}
+      <div className="flex justify-between items-center p-4 border-b">
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+            <Layers className="h-4 w-4 text-purple-600" />
+          </div>
           <div>
-            <h2 className="text-2xl font-bold">Analysis Results</h2>
-            <p className="text-sm text-muted-foreground">{folderName || folderPath}</p>
+            <h3 className="text-sm font-semibold">Analysis Results</h3>
+            <p className="text-xs text-muted-foreground">{folderName || folderPath}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={startAnalysis} variant="outline" size="sm">
+        <div className="flex gap-1">
+          <Button onClick={startAnalysis} variant="ghost" size="sm" className="h-7 text-xs">
             Reanalyze
           </Button>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7">
+            <X className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="text-center">
-            <p className="text-3xl font-bold text-green-600">{metrics.passedFiles}</p>
-            <p className="text-sm text-muted-foreground">Passed (&gt;8)</p>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-center">
-            <p className="text-3xl font-bold text-red-600">{metrics.failedFiles}</p>
-            <p className="text-sm text-muted-foreground">Failed (&le;8)</p>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-center">
-            <p className="text-3xl font-bold">{metrics.analyzedFiles}</p>
-            <p className="text-sm text-muted-foreground">Files Analyzed</p>
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-center">
-            <p className="text-3xl font-bold text-purple-600">{metrics.passRate}%</p>
-            <p className="text-sm text-muted-foreground">Pass Rate</p>
-          </div>
-        </Card>
+      {/* Compact Summary */}
+      <div className="grid grid-cols-4 gap-2 p-4 bg-muted/30">
+        <div className="text-center">
+          <p className="text-xl font-bold text-green-600">{metrics.passedFiles}</p>
+          <p className="text-xs text-muted-foreground">Passed</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold text-red-600">{metrics.failedFiles}</p>
+          <p className="text-xs text-muted-foreground">Failed</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold">{metrics.analyzedFiles}</p>
+          <p className="text-xs text-muted-foreground">Analyzed</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xl font-bold text-purple-600">{metrics.passRate}%</p>
+          <p className="text-xs text-muted-foreground">Pass Rate</p>
+        </div>
       </div>
 
       {/* Files List */}
-      <ScrollArea className="flex-1 pr-4">
-        <div className="space-y-3">
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-2">
           {analysisData.files.length === 0 ? (
             <div className="text-center py-8">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
-              <p className="text-muted-foreground">No files to analyze</p>
+              <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground">No files to analyze</p>
             </div>
           ) : (
             analysisData.files.map((file, fileIndex) => (
-              <Card key={fileIndex} className="p-4">
+              <div key={fileIndex} className="border rounded-lg">
                 <div
-                  className="flex items-center justify-between cursor-pointer"
+                  className="flex items-center justify-between cursor-pointer p-3 hover:bg-muted/50 transition-colors"
                   onClick={() => toggleFile(fileIndex)}
                 >
-                  <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center gap-2 flex-1">
                     {expandedFiles.has(fileIndex) ? (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-3 w-3" />
                     ) : (
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-3 w-3" />
                     )}
-                    <div className="flex-1">
-                      <p className="font-mono text-sm font-medium">{file.fileName}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-mono text-xs font-medium truncate">{file.fileName}</p>
                       <p className="text-xs text-muted-foreground">{file.language}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     {getScoreBadge(file.qualityScore)}
-                    <Badge variant="secondary">
-                      {file.analysis.issues.length} issues
+                    <Badge variant="secondary" className="text-xs">
+                      {file.analysis.issues.length}
                     </Badge>
                   </div>
                 </div>
 
                 {expandedFiles.has(fileIndex) && file.analysis.issues.length > 0 && (
-                  <div className="mt-4 space-y-2 pl-7">
+                  <div className="p-3 pt-0 space-y-1.5">
                     {file.analysis.issues.slice(0, 10).map((issue, issueIndex) => (
                       <div
                         key={issueIndex}
-                        className={`p-3 rounded-lg border-l-4 ${getSeverityColor(issue.severity)}`}
+                        className={`p-2 rounded border-l-2 ${getSeverityColor(issue.severity)}`}
                       >
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-start gap-2">
                           {getSeverityIcon(issue.severity)}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="text-xs">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <Badge variant="outline" className="text-xs h-4 px-1">
                                 {issue.category}
                               </Badge>
                               {issue.line && (
                                 <span className="text-xs text-muted-foreground">
-                                  Line {issue.line}
+                                  L{issue.line}
                                 </span>
                               )}
                             </div>
-                            <p className="text-sm font-medium mb-1">{issue.message}</p>
+                            <p className="text-xs font-medium mb-0.5">{issue.message}</p>
                             {issue.suggestion && (
                               <p className="text-xs text-muted-foreground">{issue.suggestion}</p>
                             )}
@@ -294,13 +290,13 @@ export function FolderAnalysisPanel({ folderPath, folderName, onClose }) {
                       </div>
                     ))}
                     {file.analysis.issues.length > 10 && (
-                      <p className="text-xs text-muted-foreground text-center py-2">
-                        +{file.analysis.issues.length - 10} more issues
+                      <p className="text-xs text-muted-foreground text-center py-1">
+                        +{file.analysis.issues.length - 10} more
                       </p>
                     )}
                   </div>
                 )}
-              </Card>
+              </div>
             ))
           )}
         </div>
