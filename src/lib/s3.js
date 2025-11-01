@@ -101,3 +101,21 @@ export async function getFileContent(key) {
     }
 }
 
+/**
+ * Upload file content directly to S3
+ */
+export async function uploadFile(key, content) {
+    const buffer = Buffer.isBuffer(content) ? content : Buffer.from(content, 'utf-8');
+
+    const command = new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: key,
+        Body: buffer,
+        ContentType: 'application/octet-stream',
+    });
+
+    await s3Client.send(command);
+    return { success: true, key };
+}
+
+
