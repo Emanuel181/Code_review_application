@@ -6,7 +6,7 @@ import * as acorn from 'acorn';
 /**
  * Analyze code and detect potential issues
  */
-function analyzeCode(content, fileName) {
+export function analyzeCode(content, fileName) {
   const issues = [];
   const lines = content.split('\n');
   const fileExtension = fileName.split('.').pop().toLowerCase();

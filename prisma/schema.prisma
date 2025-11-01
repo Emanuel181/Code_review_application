@@ -23,5 +23,81 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  fileVersions   FileVersion[]
+  reviews        Review[]
+  reviewComments ReviewComment[]
+
   @@map("users")
+}
+
+model FileVersion {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileKey   String
+  fileName  String
+  version   Int
+  content   String   @db.Text
+  hash      String
+  size      Int
+  createdAt DateTime @default(now())
+
+  reviews Review[]
+
+  @@unique([fileKey, version])
+  @@index([fileKey])
+  @@index([userId])
+  @@index([hash])
+  @@map("file_versions")
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileVersionId String
+  fileVersion   FileVersion @relation(fields: [fileVersionId], references: [id], onDelete: Cascade)
+  reviewType    String // "full" or "incremental"
+  linesReviewed Json // Array of line ranges reviewed
+  issues        Json // Array of issues found
+  metrics       Json // Review metrics
+  aiReview      Json? // AI review data (optional)
+  createdAt     DateTime    @default(now())
+
+  comments ReviewComment[]
+
+  @@index([fileVersionId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("reviews")
+}
+
+model ReviewComment {
+  id         String          @id @default(cuid())
+  reviewId   String?
+  review     Review?         @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileKey    String
+  fileName   String
+  lineNumber Int
+  issueId    String?
+  content    String          @db.Text
+  type       String // "comment", "question", "suggestion", "fix"
+  status     String          @default("open") // "open", "resolved", "dismissed"
+  parentId   String?
+  parent     ReviewComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    ReviewComment[] @relation("CommentReplies")
+  metadata   Json? // Additional metadata (reactions, tags, etc.)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  resolvedAt DateTime?
+  resolvedBy String?
+
+  @@index([reviewId])
+  @@index([fileKey])
+  @@index([userId])
+  @@index([parentId])
+  @@index([status])
+  @@map("review_comments")
 }

@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertCircle,
   AlertTriangle,
@@ -15,9 +16,16 @@ import {
   Loader2,
   ChevronDown,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Zap,
+  MessageSquare,
+  Wrench,
+  Clock,
+  TrendingUp,
+  GitCompare
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ReviewComments } from '@/components/review-comments';
 
 export function CodeReviewPanel({ fileKey, fileName, onClose }) {
   const [loading, setLoading] = useState(false);
@@ -28,10 +36,28 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
   const [aiAvailable, setAiAvailable] = useState(true);
   const [expandedAiSections, setExpandedAiSections] = useState(new Set());
 
+  // New feature states
+  const [reviewMode, setReviewMode] = useState('full'); // 'full' or 'incremental'
+  const [effortEstimation, setEffortEstimation] = useState(null);
+  const [availableFixes, setAvailableFixes] = useState({});
+  const [showComments, setShowComments] = useState(false);
+  const [applyingFix, setApplyingFix] = useState(null);
+
   const startReview = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/code-review', {
+      // First, store file version for incremental review support
+      await fetch('/api/file-version', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileKey, fileName }),
+      });
+
+      const endpoint = reviewMode === 'incremental'
+        ? '/api/code-review/incremental'
+        : '/api/code-review';
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileKey }),
@@ -42,7 +68,22 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
       }
 
       const data = await response.json();
+
+      if (data.requiresFullReview) {
+        toast.info('No previous version found', {
+          description: 'Running full review instead',
+        });
+        setReviewMode('full');
+        return startReview();
+      }
+
       setReviewData(data);
+
+      // Fetch effort estimation
+      fetchEffortEstimation(data.analysis.issues);
+
+      // Fetch available fixes
+      fetchAvailableFixes(data.analysis.issues);
 
       toast.success('Code review completed', {
         description: `Found ${data.analysis.metrics.errorCount + data.analysis.metrics.warningCount} issues`,
@@ -54,6 +95,83 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEffortEstimation = async (issues) => {
+    try {
+      const response = await fetch('/api/estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issues }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEffortEstimation(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch effort estimation:', error);
+    }
+  };
+
+  const fetchAvailableFixes = async (issues) => {
+    const fixesMap = {};
+
+    for (const issue of issues.slice(0, 20)) { // Limit to avoid too many requests
+      try {
+        const response = await fetch('/api/fixes/available', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ issue }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.fixes && data.fixes.length > 0) {
+            const issueKey = `${issue.type}-${issue.line}`;
+            fixesMap[issueKey] = {
+              issue,
+              fixes: data.fixes,
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch fixes for issue:', error);
+      }
+    }
+
+    setAvailableFixes(fixesMap);
+  };
+
+  const applyQuickFix = async (issue, fixId) => {
+    setApplyingFix(`${issue.type}-${issue.line}`);
+    try {
+      const response = await fetch('/api/fixes/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: reviewData.content,
+          issue,
+          fixId,
+          fileKey,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Fix applied', {
+          description: 'File updated successfully',
+        });
+        // Refresh review
+        setTimeout(() => startReview(), 1000);
+      } else {
+        throw new Error('Failed to apply fix');
+      }
+    } catch (error) {
+      console.error('Failed to apply fix:', error);
+      toast.error('Failed to apply fix');
+    } finally {
+      setApplyingFix(null);
     }
   };
 
@@ -171,6 +289,16 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
     return 'text-red-600 dark:text-red-400';
   };
 
+  const getEffortIcon = (effort) => {
+    const icons = {
+      low: '⚡',
+      medium: '⏱️',
+      high: '🔨',
+      'very-high': '🏗️',
+    };
+    return icons[effort] || '📝';
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
@@ -195,11 +323,48 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
               <p className="text-sm font-mono bg-muted p-2 rounded">{fileName}</p>
             </div>
 
+            {/* Review Mode Toggle */}
+            {!reviewData && !loading && (
+              <Card className="p-3 bg-muted/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">Review Mode</span>
+                  <Badge variant={reviewMode === 'incremental' ? 'default' : 'secondary'}>
+                    {reviewMode === 'incremental' ? 'Changes Only' : 'Full File'}
+                  </Badge>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={reviewMode === 'full' ? 'default' : 'outline'}
+                    onClick={() => setReviewMode('full')}
+                    className="flex-1"
+                  >
+                    <FileCode className="h-3 w-3 mr-1" />
+                    Full Review
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={reviewMode === 'incremental' ? 'default' : 'outline'}
+                    onClick={() => setReviewMode('incremental')}
+                    className="flex-1"
+                  >
+                    <GitCompare className="h-3 w-3 mr-1" />
+                    Incremental
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {reviewMode === 'incremental'
+                    ? 'Review only changed code since last version'
+                    : 'Review entire file'}
+                </p>
+              </Card>
+            )}
+
             {/* Start Review Button */}
             {!reviewData && !loading && (
               <Button onClick={startReview} className="w-full" size="lg">
                 <FileCode className="mr-2 h-4 w-4" />
-                Start Code Review
+                Start {reviewMode === 'incremental' ? 'Incremental' : 'Full'} Review
               </Button>
             )}
 
@@ -246,6 +411,39 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
                   </div>
                   <Progress value={reviewData.analysis.metrics.qualityScore} className="h-2" />
                 </div>
+
+                {/* Effort Estimation Summary */}
+                {effortEstimation && (
+                  <Card className="p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-blue-600" />
+                        <h3 className="font-semibold text-sm">Effort Estimation</h3>
+                      </div>
+                      <TrendingUp className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div>
+                        <div className="text-xl font-bold text-blue-600">
+                          {effortEstimation.summary.timeEstimate.formatted}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Est. Time</div>
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold text-green-600">
+                          {effortEstimation.summary.autoFixable}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Auto-fixable</div>
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold text-purple-600">
+                          {effortEstimation.recommended?.[0]?.priority || 0}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Top Priority</div>
+                      </div>
+                    </div>
+                  </Card>
+                )}
 
                 {/* Issues Summary */}
                 <div className="grid grid-cols-3 gap-4">
@@ -299,6 +497,15 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
                                       Line {issue.line}
                                     </span>
                                   )}
+                                  {/* Effort Badge */}
+                                  {effortEstimation?.estimations?.[index] && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      {getEffortIcon(effortEstimation.estimations[index].effort)} {effortEstimation.estimations[index].timeEstimate.average}m
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
                               {expandedIssues.has(index) ? (
@@ -309,11 +516,61 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
                             </div>
                           </button>
                           {expandedIssues.has(index) && (
-                            <div className="px-4 pb-4 pt-0 pl-11">
+                            <div className="px-4 pb-4 pt-0 pl-11 space-y-3">
                               <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded">
                                 <strong className="block mb-1 text-foreground">Suggestion:</strong>
                                 {issue.suggestion}
                               </div>
+
+                              {/* Effort Details */}
+                              {effortEstimation?.estimations?.[index] && (
+                                <div className="text-xs space-y-1 bg-blue-50 dark:bg-blue-950/20 p-3 rounded">
+                                  <div className="font-semibold mb-2 flex items-center gap-2">
+                                    <Clock className="h-3 w-3" />
+                                    Effort Estimation
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    <Badge variant="secondary">
+                                      {effortEstimation.estimations[index].complexity} complexity
+                                    </Badge>
+                                    <Badge variant="outline">
+                                      {effortEstimation.estimations[index].riskLevel} risk
+                                    </Badge>
+                                    <Badge>
+                                      Priority: {effortEstimation.estimations[index].priority}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Available Fixes */}
+                              {availableFixes[`${issue.type}-${issue.line}`] && (
+                                <div className="space-y-2">
+                                  <div className="font-semibold text-xs flex items-center gap-2">
+                                    <Wrench className="h-3 w-3" />
+                                    Available Fixes
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {availableFixes[`${issue.type}-${issue.line}`].fixes.map((fix) => (
+                                      <Button
+                                        key={fix.id}
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => applyQuickFix(issue, fix.id)}
+                                        disabled={applyingFix === `${issue.type}-${issue.line}`}
+                                        className="text-xs"
+                                      >
+                                        {applyingFix === `${issue.type}-${issue.line}` ? (
+                                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                        ) : (
+                                          <Zap className="h-3 w-3 mr-1" />
+                                        )}
+                                        {fix.label}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </Card>
@@ -437,6 +694,27 @@ export function CodeReviewPanel({ fileKey, fileName, onClose }) {
                         Run Again
                       </Button>
                     </div>
+                  )}
+                </div>
+
+                {/* Comments Section */}
+                <div className="border-t pt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="text-sm font-medium text-muted-foreground">Discussion</h3>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowComments(!showComments)}
+                    >
+                      {showComments ? 'Hide' : 'Show'}
+                    </Button>
+                  </div>
+
+                  {showComments && (
+                    <ReviewComments fileKey={fileKey} fileName={fileName} />
                   )}
                 </div>
               </>
