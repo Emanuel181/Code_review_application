@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { getFileVersion, getLatestFileVersion } from '@/lib/version-tracker';
-import { generateDiff } from '@/lib/diff-engine';
+import { calculateDiff } from '@/lib/diff-engine';
 import prisma from '@/lib/prisma';
 
 /**
@@ -50,7 +50,7 @@ export const GET = async (req, { params }) => {
     }
 
     // Generate diff
-    const diff = generateDiff(compareVersion.content, currentVersion.content);
+    const diff = calculateDiff(compareVersion.content, currentVersion.content);
 
     return NextResponse.json({
       success: true,

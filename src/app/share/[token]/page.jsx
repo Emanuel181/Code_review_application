@@ -23,7 +23,7 @@ import {
   User,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { analyzeCode } from '@/lib/multi-dimensional-analyzer';
+import { analyzeCodeMultiDimensional } from '@/lib/multi-dimensional-analyzer';
 
 export default function SharedFilePage() {
   const params = useParams();
@@ -179,7 +179,7 @@ export default function SharedFilePage() {
 
     setAnalyzing(true);
     try {
-      const result = analyzeCode(fileContent, shareData.fileName);
+      const result = analyzeCodeMultiDimensional(fileContent, shareData.fileName);
       setAnalysisResult(result);
       setActiveTab('analysis');
       toast.success('Analysis complete');
