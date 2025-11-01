@@ -5,11 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="84c72250-65ef-442e-ba3c-be751bb94ddf" name="Changes" comment="trial">
-      <change afterPath="$PROJECT_DIR$/qodana.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FILE_SHARING_COMPLETE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/app/api/share/[token]/comment/route.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/app/api/share/[token]/edit/route.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/app/api/share/[token]/route.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/app/api/share/route.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/app/share/[token]/page.jsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/sonar-project.properties" beforeDir="false" afterPath="$PROJECT_DIR$/sonar-project.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/home-page/page.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/app/home-page/page.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/folder-analysis-panel.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/folder-analysis-panel.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/prisma/schema.prisma" beforeDir="false" afterPath="$PROJECT_DIR$/prisma/schema.prisma" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/folder-tree-new/index.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/folder-tree-new/index.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/s3.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/s3.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,14 +144,6 @@
       <workItem from="1761984699534" duration="9000" />
       <workItem from="1761984781692" duration="4000" />
       <workItem from="1761984789007" duration="8665000" />
-    </task>
-    <task id="LOCAL-00009" summary="m">
-      <option name="closed" value="true" />
-      <created>1761780003370</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1761780003370</updated>
     </task>
     <task id="LOCAL-00010" summary="m">
       <option name="closed" value="true" />
@@ -530,7 +529,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762010541800</updated>
     </task>
-    <option name="localTasksCounter" value="58" />
+    <task id="LOCAL-00058" summary="trial">
+      <option name="closed" value="true" />
+      <created>1762011035780</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1762011035780</updated>
+    </task>
+    <option name="localTasksCounter" value="59" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

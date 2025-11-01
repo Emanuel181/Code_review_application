@@ -26,6 +26,7 @@ model User {
   fileVersions   FileVersion[]
   reviews        Review[]
   reviewComments ReviewComment[]
+  shareLinks     ShareLink[]
 
   @@map("users")
 }
@@ -100,4 +101,50 @@ model ReviewComment {
   @@index([parentId])
   @@index([status])
   @@map("review_comments")
+}
+
+model ShareLink {
+  id          String         @id @default(cuid())
+  token       String         @unique
+  fileKey     String
+  fileName    String
+  ownerId     String
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  permissions Json // { canView, canEdit, canComment, canAnalyze }
+  expiresAt   DateTime
+  createdAt   DateTime       @default(now())
+  comments    ShareComment[]
+  edits       ShareEdit[]
+
+  @@index([token])
+  @@index([ownerId])
+  @@index([fileKey])
+  @@map("share_links")
+}
+
+model ShareComment {
+  id          String    @id @default(cuid())
+  shareLinkId String
+  shareLink   ShareLink @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+  content     String    @db.Text
+  lineNumber  Int?
+  userName    String
+  userEmail   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([shareLinkId])
+  @@map("share_comments")
+}
+
+model ShareEdit {
+  id          String    @id @default(cuid())
+  shareLinkId String
+  shareLink   ShareLink @relation(fields: [shareLinkId], references: [id], onDelete: Cascade)
+  content     String    @db.Text
+  userName    String
+  userEmail   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([shareLinkId])
+  @@map("share_edits")
 }

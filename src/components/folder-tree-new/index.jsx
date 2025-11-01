@@ -6,9 +6,10 @@ import { Tree } from '@/components/ui/tree-view';
 import { useFolderTreeNew } from './useFolderTreeNew';
 import { FolderTreeHeader } from './FolderTreeHeader';
 import { FolderTreeDialogs } from './FolderTreeDialogs';
-import { Folder, FolderOpen, FileIcon, Plus, Trash2, Download, RefreshCw, UploadCloud, FolderDown, FileSearch, Layers, Edit } from 'lucide-react';
+import { Folder, FolderOpen, FileIcon, Plus, Trash2, Download, RefreshCw, UploadCloud, FolderDown, FileSearch, Layers, Edit, Share2, X, Eye, MessageSquare, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { CodeReviewPanel } from '@/components/code-review-panel';
 import { FolderAnalysisPanel } from '@/components/folder-analysis-panel';
@@ -20,6 +21,7 @@ export function FolderTree({ folders, onFolderSelect, selectedFolder, onFolderCr
     const [editingFile, setEditingFile] = useState(null);
     const [fileContent, setFileContent] = useState('');
     const [loadingFile, setLoadingFile] = useState(false);
+    const [shareDialog, setShareDialog] = useState({ open: false, file: null, shareUrl: null });
 
     const {
         expandedFolders,
@@ -149,6 +151,46 @@ export function FolderTree({ folders, onFolderSelect, selectedFolder, onFolderCr
             });
         } finally {
             setLoadingFile(false);
+        }
+    };
+
+    const handleShare = async (file) => {
+        try {
+            const response = await fetch('/api/share', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fileKey: file.key,
+                    fileName: file.name,
+                    permissions: {
+                        canView: true,
+                        canEdit: true,
+                        canComment: true,
+                        canAnalyze: true,
+                    },
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create share link');
+            }
+
+            const data = await response.json();
+            setShareDialog({
+                open: true,
+                file,
+                shareUrl: data.shareLink.url,
+                expiresAt: data.shareLink.expiresAt,
+            });
+
+            toast.success('Share link created', {
+                description: 'Copy the link to share with others',
+            });
+        } catch (error) {
+            console.error('Error creating share link:', error);
+            toast.error('Failed to create share link', {
+                description: error.message,
+            });
         }
     };
 
@@ -360,6 +402,22 @@ export function FolderTree({ folders, onFolderSelect, selectedFolder, onFolderCr
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>Edit File</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleShare(file);
+                                    }}
+                                    className="h-6 w-6 p-0 hover:bg-accent text-purple-600"
+                                >
+                                    <Share2 className="h-3 w-3" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Share File</TooltipContent>
                         </Tooltip>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -652,6 +710,88 @@ export function FolderTree({ folders, onFolderSelect, selectedFolder, onFolderCr
                         onFolderCreated();
                     }}
                 />
+            )}
+
+            {/* Share Dialog */}
+            {shareDialog.open && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+                    <Card className="w-full max-w-md p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                                    <Share2 className="h-4 w-4 text-purple-600" />
+                                </div>
+                                <h3 className="text-lg font-semibold">Share File</h3>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setShareDialog({ open: false, file: null, shareUrl: null })}
+                                className="h-7 w-7"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-sm font-medium mb-1">{shareDialog.file?.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                    Expires: {new Date(shareDialog.expiresAt).toLocaleDateString()}
+                                </p>
+                            </div>
+
+                            <div className="p-3 bg-muted rounded-lg">
+                                <p className="text-xs font-medium mb-2">Shareable Link:</p>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={shareDialog.shareUrl || ''}
+                                        readOnly
+                                        className="flex-1 px-2 py-1 text-xs border rounded bg-background font-mono"
+                                    />
+                                    <Button
+                                        size="sm"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(shareDialog.shareUrl);
+                                            toast.success('Link copied to clipboard');
+                                        }}
+                                        className="h-7"
+                                    >
+                                        Copy
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                                <p className="text-xs font-medium mb-2">Permissions:</p>
+                                <div className="flex flex-wrap gap-1">
+                                    <Badge variant="secondary" className="text-xs">
+                                        <Eye className="h-3 w-3 mr-1" />
+                                        View
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">
+                                        <Edit className="h-3 w-3 mr-1" />
+                                        Edit
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">
+                                        <MessageSquare className="h-3 w-3 mr-1" />
+                                        Comment
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">
+                                        <Sparkles className="h-3 w-3 mr-1" />
+                                        Analyze
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            <p className="text-xs text-muted-foreground">
+                                Anyone with this link can view, edit, comment on, and analyze this file.
+                                The link will expire in 7 days.
+                            </p>
+                        </div>
+                    </Card>
+                </div>
             )}
         </>
     );
