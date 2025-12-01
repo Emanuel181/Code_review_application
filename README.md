@@ -69,7 +69,7 @@ This project enhances developer productivity by integrating intelligent code rev
 ---
 
 ## Architecture
-![Architecture](./images/photo.png)
+![Architecture]([./images/photo.png](https://github.com/Emanuel181/Code_review_application/blob/main/Screenshot%202025-11-01%20171827.png))
 ---
 
 
